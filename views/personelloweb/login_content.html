@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="de" class="wf-personello-n4-active wf-asap-n4-active wf-amaticsc-n4-active wf-active">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    
+    <!-- ========================================== -->
+    <!-- 1. ICONS & STYLESHEETS -->
+    <!-- ========================================== -->
+    <link rel="apple-touch-icon" sizes="180x180" href="https://de.personello.com/assets/grid/img/apple-touch-icon-180x180.png"> 
+    <link rel="apple-touch-icon" sizes="152x152" href="https://de.personello.com/assets/grid/img/apple-touch-icon-152x152.png"> 
+    <link rel="apple-touch-icon" sizes="120x120" href="https://de.personello.com/assets/grid/img/apple-touch-icon-120x120.png"> 
+    <link rel="apple-touch-icon" sizes="76x76" href="https://de.personello.com/assets/grid/img/apple-touch-icon-76x76.png"> 
+    <link href="/views/personelloweb/MeinKonto_files/default.css" type="text/css" rel="stylesheet"> 
+    <link rel="stylesheet" href="/views/personelloweb/MeinKonto_files/fonts.css" media="all">
+
+    <style>
+        /* 💡 NEW: Success message box style */
+        .pso-success-alert {
+            background-color: #d4edda !important;
+            color: #155724 !important;
+            border: 1px solid #c3e6cb !important;
+            padding: 12px 15px !important;
+            margin-bottom: 20px !important;
+            border-radius: 4px !important;
+            font-size: 1.4rem !important;
+            font-weight: bold !important;
+            text-align: center !important;
+            display: none; /* Default hidden */
+        }
+
+        /* 💻 PC VIEW FIXES (Google button එක හැම තැනකදීම වමට තැබීම) */
+        .g_id_signin, #g_id_onload, .S9gUrf-YoZ4jf {
+            display: block !important;
+            text-align: left !important;
+            width: max-content !important;
+            margin: 0px 0 0 0 !important;
+        }
+        iframe.L5Fo6c-PQbLGe {
+            margin: 0 !important;
+        }
+
+        /* 📱 MOBILE VIEW ENGINE (100% MATCH TO LIVE SITE) */
+        @media screen and (max-width: 768px) {
+            
+            html, body, #contentWrapper, #content, .row {
+                background-color: #ffffff !important;
+                background: #ffffff !important;
+                overflow-x: hidden !important;
+                max-width: 100% !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            }
+
+            #contentWrapper {
+                padding: 10px !important;
+            }
+
+            #breadcrumb { 
+                background-color: #ffffff !important;
+                background: #ffffff !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+            }
+
+            header.row, header.row .col12, h1 {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0px 5px 10px 5px !important;
+                text-align: left !important;
+            }
+            h1 {
+                font-size: 2.8rem !important;
+                line-height: 1.2 !important;
+                margin-top: -5px !important;
+            }
+
+            #breadcrumb .pso-desktop-breadcrumb {
+                display: none !important;
+            }
+            #breadcrumb .pso-mobile-breadcrumb {
+                display: inline-block !important;
+                font-size: 1.3rem !important;
+                color: #666666 !important;
+                text-decoration: none !important;
+                padding: 20px 10px 0px 10px !important;
+                background: transparent !important;
+            }
+
+            .row .col6 {
+                width: 100% !important;
+                float: none !important;
+                margin-left: 0 !important;
+                margin-bottom: 20px !important;
+                box-sizing: border-box !important;
+            }
+            
+            form.defaultBox, div.defaultBox {
+                padding: 20px 15px !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+                background: #ededed !important;
+            }
+
+            form.defaultBox button[type="submit"],
+            div.defaultBox a.defaultButton {
+                width: 100% !important;
+                max-width: 100% !important;
+                display: block !important;
+                text-align: center !important;
+                box-sizing: border-box !important;
+                float: none !important;
+                margin: 15px 0 0 0 !important;
+            }
+            
+            form.defaultBox div.col6 {
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            form.defaultBox a.muted.small {
+                float: none !important;
+                display: block !important;
+                text-align: center !important;
+                margin: 15px auto 5px auto !important;
+                width: 100% !important;
+            }
+
+            .pso-oder-text {
+                text-align: left !important;
+                margin-bottom: 10px !important;
+            }
+
+            .g_id_signin, #g_id_onload, .S9gUrf-YoZ4jf {
+                width: max-content !important;
+                max-width: 100% !important;
+                display: block !important;
+                overflow: visible !important;
+                margin: 0 0 0 0 !important;
+                padding: 0 !important;
+                text-align: left !important;
+            }
+
+            iframe.L5Fo6c-PQbLGe {
+                width: 240px !important;
+                min-width: 240px !important;
+                max-width: 240px !important;
+                margin: 0 !important;
+                left: 0 !important;
+                box-sizing: border-box !important;
+            }
+
+            ul.uspList {
+                padding-left: 25px !important;
+                margin-left: 0 !important;
+            }
+            ul.uspList li {
+                text-indent: 0 !important;
+                position: relative !important;
+                padding-left: 5px !important;
+                line-height: 1.5 !important;
+            }
+            ul.uspList li:before {
+                left: -25px !important;
+                position: absolute !important;
+                top: 2px !important;
+            }
+        }
+
+        @media screen and (min-width: 769px) {
+            #breadcrumb .pso-mobile-breadcrumb {
+                display: none !important;
+            }
+        }
+    </style>
+    
+    <title>MyPersonello | Anmeldung</title> 
+    <meta name="robots" content="noindex">
+</head>
+
+<body class="theme default" id="pageStart">
+
+    <script type="text/javascript"> 
+        WebFontConfig = {
+            custom : {
+                families : [ 'personello', 'Asap:400,400i,700', 'Amatic SC' ],
+                urls : [ "/views/personelloweb/MeinKonto_files/fonts.css"]
+            }
+        };
+    </script> 
+    <noscript> <link href="/views/personelloweb/MeinKonto_files/default.css" type="text/css" rel="stylesheet"> </noscript>
+
+    <!-- ========================================== -->
+    <!-- 2. BREADCRUMB NAVIGATION                   -->
+    <!-- ========================================== -->
+    <div id="breadcrumb" role="navigation" aria-label="Breadcrumbs"> 
+        <div class="limiter"> 
+            <p class="pso-desktop-breadcrumb">Du befindest dich hier: <a href="/">Home</a> <span class="icon-chevron-right"></span> <a href="/mypersonello">Konto</a> <span class="icon-chevron-right"></span> Anmeldung </p> 
+            <a href="/mypersonello" class="pso-mobile-breadcrumb">&lt; Konto</a>
+        </div> 
+    </div> 
+
+    <main id="contentWrapper" class="clear" aria-label="Inhalt"> 
+        <div id="content"> 
+            <header class="row"> 
+                <div class="col12"> 
+                    <h1>Mein Konto</h1> 
+                </div>
+            </header>
+
+            <!-- 💡 NEW: Success Message Alert Box Component -->
+            <div id="successAlert" class="pso-success-alert">
+                Registrierung erfolgreich! Bitte melde dich an.
+            </div>
+
+            <div class="row"> 
+                <!-- Anmelden (Login Form) -->
+                <div class="col6 first"> 
+                    <form class="col6 first defaultBox" method="post" action="/api/auth/login"> 
+                        <p class="title">Anmelden</p> 
+                        
+                        <label class="required">Email</label> 
+                        <input type="email" name="frmStr_email" tabindex="1" required=""> 
+                        
+                        <label class="required">Password</label> 
+                        <input type="password" name="frmStr_password" tabindex="2" required=""> 
+                        
+                        <div class="col6 first" style="margin-top: 15px;"> 
+                            <button type="submit" class="link" name="frmStr_submit" tabindex="3">
+                                <span class="icon-login"></span>
+                            </button> 
+                        </div> 
+                        
+                        <a class="muted small right" href="/passwort-vergessen" style="margin-top: 10px; display: inline-block;">???</a> 
+                        
+                        <!-- Google SSO Section -->
+                        <div class="col6 first" style="margin-top: 20px; border-top: 1px dashed #ddd; padding-top: 15px;"> 
+                            <p class="pso-oder-text">oder:</p> 
+                            <script src="/views/personello_files/client" async="" defer=""></script> 
+                            
+                            <div id="g_id_onload" class="g_id_signin" data-type="string" data-client_id="118009632692-d0b811a33p1ljvn7usc7f266rp5d9ap8.apps.googleusercontent.com" data-login_uri="/api/auth/sso/google" data-auto_prompt="false" data-theme="filled_blue" data-width="240">
+                                <div class="S9gUrf-YoZ4jf" style="position: relative;">
+                                    <iframe src="/views/personelloweb/MeinKonto_files/button.html" class="L5Fo6c-PQbLGe" allow="identity-credentials-get" title="Sign in with Google Button" style="display: block; position: relative; top: 0px; left: 0px; height: 44px; width: 240px; border: 0px; margin: 0;"></iframe>
+                                </div>
+                            </div> 
+                        </div> 
+                    </form> 
+                </div> 
+
+                <!-- Noch kein Konto Section -->
+                <div class="col6 defaultBox">
+                    <p class="title">Noch kein Konto?</p> 
+                    <p>Alle MyPersonello Vorteile im Überblick:</p> 
+                    <ul class="uspList"> 
+                        <li>Designs speichern und später weitershoppen</li> 
+                        <li>Einfache Bestellung durch hinterlegte Adressen</li> 
+                        <li>Exklusive Vorteile (Rabatte, Gutscheine, ...)</li> 
+                        <li>Family &amp; Friends Vorteile</li> 
+                        <li>Produkttester werden</li> 
+                    </ul> 
+                    <a class="defaultButton right" href="/mypersonello/register" style="margin-top: 15px;">Jetzt registrieren</a> 
+                </div> 
+            </div> 
+        </div> 
+    </main>
+
+    <!-- ========================================== -->
+    <!-- 3. BASE FOOTER SCRIPTS -->
+    <!-- ========================================== -->
+    <script src="/views/personelloweb/MeinKonto_files/jquery-1.11.1.min.js.download"></script> 
+    <script type="text/javascript" src="/views/personelloweb/MeinKonto_files/desktop.js.download"></script> 
+    <script src="/views/personelloweb/MeinKonto_files/mypso.js.download"></script>
+
+    <!-- 💡 NEW: URL Parameter Engine to catch status=success -->
+    <script>
+        $(document).ready(function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('status') === 'success') {
+                $('#successAlert').fadeIn('slow');
+            }
+        });
+    </script>
+</body>
+</html>

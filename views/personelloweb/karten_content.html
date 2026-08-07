@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meine Karten</title>
+    
+    <style>
+        /* ========================================== */
+        /* 🚀 GLOBAL & RESET STYLES                   */
+        /* ========================================== */
+        body {
+            font-family: 'Asap Custom', 'Segoe UI', sans-serif;
+            background-color: #f7fafc;
+            color: #333333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .pso-container {
+            max-width: 1200px !important; 
+            margin: 0 auto !important;
+            padding: 0 5px !important;
+            box-sizing: border-box !important;
+        }
+
+        /* 🚀 BREADCRUMB BAR (LOGOUT RIGHT ALIGNED) */
+        .pso-breadcrumb-bar {
+            background-color: #ededed;
+            padding: 10px 0;
+            font-size: 13px;
+            color: #666666;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .pso-breadcrumb-bar a {
+            color: #4a5568;
+            text-decoration: none;
+        }
+        .pso-breadcrumb-bar a:hover {
+            text-decoration: underline;
+        }
+        
+        /* 🚀 NEW LOGOUT TOP BUTTON WITH 3D PNG ICON */
+        .pso-logout-top-btn {
+            display: flex;
+            align-items: center;
+            gap: 0px;
+            color: #4a5568 !important; /* 💡 "Abmelden" ටෙක්ස්ට් එක අයින් කරන නිසා පාට Dark Slate කළා */
+            text-decoration: none;
+            transition: transform 0.2s ease;
+        }
+        .pso-logout-top-btn:hover {
+            transform: scale(1.05); /* 💡 Hover කරද්දී පොඩ්ඩක් ලොකු වෙන්න */
+        }
+        .pso-logout-top-btn img {
+            height: 40px; /* 💡 3D Icon එකක් නිසා ලස්සනට පේන්න සයිස් එක වැඩි කළා */
+            width: auto;
+            object-fit: contain;
+            vertical-align: middle;
+            filter: none !important; /* 🚀 රතු පාට කරන Filter එක සම්පූර්ණයෙන්ම ඉවත් කළා */
+            border-radius: 0 !important;
+        }
+
+        /* ========================================== */
+        /* 🚀 HERO BANNER (2.JPG MATCH)               */
+        /* ========================================== */
+        .pso-welcome-banner {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 30px 40px;
+            margin-top: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            position: relative;
+            overflow: hidden;
+        }
+        .pso-welcome-text {
+            flex: 1;
+            max-width: 55%;
+        }
+        .pso-welcome-text h1 {
+            font-size: 38px;
+            margin: 0 0 5px 0;
+            color: #1a202c;
+            font-weight: 700;
+        }
+        .pso-title-img-wrap {
+            margin-bottom: 15px;
+        }
+        .pso-title-img-wrap img {
+            max-height: 48px;
+            object-fit: contain;
+            border-radius: 0 !important;
+        }
+        .pso-welcome-text p {
+            font-size: 15px;
+            margin: 0 0 20px 0;
+            color: #4a5568;
+            line-height: 1.5;
+        }
+        .pso-underline {
+            width: 50px;
+            height: 4px;
+            background-color: #2d6a4f;
+            border-radius: 2px;
+        }
+        .pso-welcome-image img {
+            max-height: 220px;
+            object-fit: contain;
+            border-radius: 0 !important;
+        }
+
+        /* ========================================== */
+        /* 🚀 DYNAMIC CARDS GRID ENGINE               */
+        /* ========================================== */
+        .pso-cards-layout {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .pso-card-box {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        /* Action/Generator බ්ලොක් එක */
+        .pso-action-tile {
+            justify-content: center;
+            gap: 15px;
+        }
+        .pso-action-tile img {
+            max-height: 90px;
+            object-fit: contain;
+            border-radius: 0 !important;
+        }
+        .pso-action-tile h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 0;
+            color: #1a202c;
+            line-height: 1.4;
+        }
+
+        /* ඩයිනමික් ලෙස API එකෙන් එන ඉමේජ් කොටුව */
+        .pso-preview-holder {
+            background-color: #ebe7e0;
+            border-radius: 6px;
+            width: 100%;
+            height: 170px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            border: 1px solid #e2dcd5;
+        }
+        .pso-preview-holder img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+            border-radius: 0 !important;
+        }
+        .pso-card-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #2f3640;
+            text-transform: capitalize;
+            margin: 0 0 15px 0;
+        }
+
+        /* ========================================== */
+        /* 🚀 MODERN 3D CONTAINER BUTTONS ENGINE      */
+        /* ========================================== */
+        .pso-card-actions {
+            display: flex; /* 💡 Grid වෙනුවට Flex කළා */
+            justify-content: space-between; /* 💡 බටන් 2ක් තිබ්බොත් දෙපැත්තේ അයිනටම තල්ලු කරයි */
+            align-items: center;
+            gap: 8px; /* බටන්ස් අතර පරතරය */
+            margin-top: 5px;
+            padding: 0 2px; /* කාඩ් එකේ දාරවල නොවැදීමට */
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .pso-3d-btn {
+            display: flex !important;
+            flex: 1; /* 🚀 [NEW]: බටන් 2ක් හෝ 3ක් තිබ්බත් ඩයිනමික් විදිහට මුළු පළලම Fill කරගනී */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 52px; /* PC බටන් එකේ උස */
+            
+            /* 💡 Premium Soft Layout Button Backing */
+            background-color: #ffffff !important; 
+            border-radius: 8px !important; 
+            
+            padding: 6px !important;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing: border-box;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* 💡 Hover & Active Effect */
+        .pso-3d-btn:hover {
+            background-color: #e5e7eb !important; 
+            border-color: #d1d5db !important;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); 
+            opacity: 1 !important;
+        }
+        .pso-3d-btn:active {
+            transform: translateY(-1px);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            background-color: #d1d5db !important;
+        }
+
+        /* 💡 PC Icon Size */
+        .pso-3d-btn img {
+            height: 50px; 
+            width: auto;
+            object-fit: contain;
+            border-radius: 0 !important;
+            background: transparent !important;
+            border: none !important;
+        }
+
+        /* ========================================== */
+        /* 🚀 CLICKABLE BOX LINK ENGINE               */
+        /* ========================================== */
+        .pso-whole-box-link {
+                text-decoration: none !important; /* ලින්ක් එකේ යටින් ඉරි ඒම වළක්වයි */
+                cursor: pointer;
+                transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
+        }
+
+        /* 💡 මවුස් එක උඩට යද්දී පෙනුම වෙනස් නොකර ලස්සනට උඩට Pop-up වීමට */
+        .pso-whole-box-link:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        /* 💡 බටන් එකක් වගේ පේන්න span එකට පරණ style එකම දීම */
+        .pso-whole-box-link .pso-generate-btn {
+                display: block;
+                text-align: center;
+                background-color: #92ccb6; /* 💡 ඔයාගේ පරණ ලස්සන කොළ පාට පසුබිම */
+                color: #1a202c;
+                text-transform: uppercase;
+                font-weight: 700;
+                font-size: 14px;
+                letter-spacing: 0.5px;
+                padding: 12px;
+                width: 100%;
+                border-radius: 4px;
+                box-sizing: border-box;
+                transition: background 0.2s;
+        }
+
+        .pso-whole-box-link:hover .pso-generate-btn {
+                background-color: #7bbe9f; /* Hover වෙද්දී බටන් එකේ පාට වෙනස් වීම */
+        }
+
+        /* ========================================== */
+        /* 📱 MOBILE VIEW ENGINE (100% ADAPTIVE)     */
+        /* ========================================== */
+        @media screen and (max-width: 768px) {
+            body { background-color: #ffffff; }
+            .pso-breadcrumb-bar {
+                background-color: #ffffff;
+                padding: 15px 10px 10px 10px;
+            }
+
+            .pso-whole-box-link .pso-generate-btn { font-size: 12px !important; padding: 10px !important; }
+
+            .pso-3d-btn {
+                height: 45px !important; /* 💡 ඔයා සෙට් කරගත්තු මොබයිල් උස */
+                border-radius: 6px !important; 
+                padding: 0px !important;
+                flex: 1; /* මොබයිල් එකෙත් ඩයිනමික් විදිහට ඉඩ බෙදා ගනී */
+            }
+
+            .pso-3d-btn img {
+                height: 40px !important; /* 💡 ඔයා සෙට් කරගත්තු මොබයිල් අයිකන් උස */
+                width: auto !important;
+            }
+            .pso-desktop-crumbs { display: none !important; }
+            .pso-mobile-back { display: inline-block !important; font-size: 15px; color: #666666; font-weight: bold; text-decoration: none; }
+            
+            .pso-welcome-banner {
+                flex-direction: column-reverse;
+                padding: 20px;
+                margin: 10px;
+                text-align: center;
+                gap: 15px;
+            }
+            .pso-welcome-text { max-width: 100%; }
+            .pso-welcome-text h1 { font-size: 26px; }
+            .pso-title-img-wrap img { max-height: 35px; }
+            .pso-welcome-text p { font-size: 14px; }
+            .pso-underline { margin: 0 auto; }
+            .pso-welcome-image img { max-height: 140px; }
+
+            /* මොබයිල් එකේදී පේළියට 2 බැගින් */
+            .pso-cards-layout {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+                padding: 10px;
+            }
+            .pso-card-box { padding: 15px 10px; }
+            .pso-preview-holder { height: 120px; padding: 5px; }
+            .pso-action-tile h3 { font-size: 13px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 🚀 1. BREADCRUMB BAR (LOGOUT RIGHT ALIGNED) -->
+    <div class="pso-breadcrumb-bar">
+        <div class="pso-container" style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+            <div class="pso-desktop-crumbs">
+                Du befindest dich hier: <a href="https://de.personello.com/">Home</a> &gt; <a href="/mypersonello">Konto</a> &gt; Karten
+            </div>
+            <a href="/mypersonello" class="pso-mobile-back" style="display: none;">&lt; Konto</a>
+            
+            <!-- Logout Button (Right - both PC & Mobile) -->
+            <div>
+                <a href="/api/auth/logout" class="pso-logout-top-btn" title="Abmelden">
+                    <img src="/views/personelloweb/meinkonto_content/logout.svg" alt="Logout">
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="pso-container">
+        
+        <!-- 🚀 2. HERO BANNER SECTION (2.JPG STYLE) -->
+        <div class="pso-welcome-banner">
+            <div class="pso-welcome-text">
+                <h1>Deine Karten,</h1>
+                <div class="pso-title-img-wrap">
+                    <img src="/views/personelloweb/karten_content/titletext.png" alt="deine Geschichten!">
+                </div>
+                <p>Gestalte persönliche Karten für jeden Anlass und teile besondere Momente.</p>
+                <div class="pso-underline"></div>
+            </div>
+            <div class="pso-welcome-image">
+                <img src="/views/personelloweb/karten_content/toptitleimage.png" alt="Cards Visual Showcase">
+            </div>
+        </div>
+
+        <!-- ========================================================================================= -->
+        <!-- 🚀 3. CARDS RESPONSE GRID ROOT CONTAINER (DYNAMIC REGISTRY LOADING)                       -->
+        <!-- ========================================================================================= -->
+        <div class="pso-cards-layout" id="kartenGridContainer">
+            
+            <!-- [STATIC FIRST COLUMN: THE CARD GENERATOR ACTION BUTTON BLOCK - WHOLE BOX CLICKABLE] -->
+            <a href="{{GENERATE_LINK}}" class="pso-card-box pso-action-tile pso-whole-box-link">
+                    <img src="/views/personelloweb/meinkonto_content/cards.png" alt="Karten Icon">
+                    <h3>Grußkarten für jeden Anlass</h3>
+                    <span class="pso-generate-btn">Karten Generieren</span>
+            </a>
+
+            <!-- ඩයිනමික් ලෙස ජාවාස්ක්‍රිප්ට් එකෙන් ලෝඩ් වෙන කාඩ් ටික මෙතනින් පල්ලෙහාට ඇඩ් වෙයි -->
+            <div id="pso-loading-placeholder" style="grid-column: span 3; padding: 30px; color: gray; font-size: 14px;">
+                Karten werden geladen...
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ========================================================================================= -->
+    <!-- 🚀 JAVASCRIPT ENGINE WITH EMPTY STATE MESSAGE FIX                                         -->
+    <!-- ========================================================================================= -->
+    <script>
+        // හිස් අවස්ථාවකදී පෙන්වන ජර්මන් මැසේජ් එක හැඩගස්වන Helper Function එකක්
+        function showEmptyKartenMessage() {
+            const container = document.getElementById("kartenGridContainer");
+            // Grid එක ඇතුළේ "Karten Generieren" බටන් එක විතරක් ඉතිරි කරලා මැසේජ් එක දානවා
+            container.innerHTML = `
+                <a href="{{GENERATE_LINK}}" class="pso-card-box pso-action-tile pso-whole-box-link">
+                    <img src="/views/personelloweb/meinkonto_content/cards.png" alt="Karten Icon">
+                    <h3>Grußkarten für jeden Anlass</h3>
+                    <span class="pso-generate-btn">Karten Generieren</span>
+                </a>
+                <div id="pso-empty-message" style="grid-column: span 3; padding: 40px 20px; color: #718096; font-size: 15px; font-weight: 600; text-align: left; display: flex; align-items: center;">
+                    Sie haben noch keine Karten erstellt.
+                </div>
+            `;
+        }
+
+        async function loadUserKartenRegistry() {
+            const container = document.getElementById("kartenGridContainer");
+            const placeholder = document.getElementById("pso-loading-placeholder");
+            
+            try {
+                const response = await fetch('/api/ulf/my-cards'); 
+                if (!response.ok) throw new Error("Failed to fetch karten array");
+                const rawFiles = await response.json(); 
+                
+                if (placeholder) placeholder.remove();
+                
+                // 🚀 [FIX 1]: සර්වර් එකෙන් කාඩ් මුකුත්ම ආවේ නැත්නම් ජර්මන් මැසේජ් එක පෙන්වීම
+                if (!rawFiles || rawFiles.length === 0) {
+                    showEmptyKartenMessage();
+                    return;
+                }
+                
+                let cardsGroupMap = {};
+                rawFiles.forEach(fileUrl => {
+                    const filename = fileUrl.split('/').pop(); 
+                    let match = filename.match(/user_\d+_card_(.*?)_(\d+)(_preview)?\.(mp4|pdf|png)/);
+                    if (!match) return;
+                    let cardIdSlug = match[1]; 
+                    let timestamp = match[2];  
+                    let extension = match[4];  
+                    let uniqueGenerationKey = `${cardIdSlug}_${timestamp}`;
+                    
+                    if (!cardsGroupMap[uniqueGenerationKey]) {
+                        cardsGroupMap[uniqueGenerationKey] = {
+                            generation_key: uniqueGenerationKey,
+                            card_id_slug: cardIdSlug,
+                            title: cardIdSlug.replace(/_/g, ' '),
+                            preview_img: null,
+                            video_url: null,
+                            pdf_url: null
+                        };
+                    }
+                    if (extension === 'png') cardsGroupMap[uniqueGenerationKey].preview_img = fileUrl;
+                    if (extension === 'mp4') cardsGroupMap[uniqueGenerationKey].video_url = fileUrl;
+                    if (extension === 'pdf') cardsGroupMap[uniqueGenerationKey].pdf_url = fileUrl;
+                });
+
+                // ඇත්තටම valid කාඩ් මැප් එකක් හැදුනේ නැත්නම් ඒත් හිස් මැසේජ් එක පෙන්වනවා
+                if (Object.keys(cardsGroupMap).length === 0) {
+                    showEmptyKartenMessage();
+                    return;
+                }
+
+                // Placeholder එක තිබ්බොත් විතරක් අයින් කරලා ලිස්ට් එක ක්ලියර් කරනවා (Generator Button එක රැකගෙන)
+                container.innerHTML = `
+                    <a href="{{GENERATE_LINK}}" class="pso-card-box pso-action-tile pso-whole-box-link">
+                        <img src="/views/personelloweb/meinkonto_content/cards.png" alt="Karten Icon">
+                        <h3>Grußkarten für jeden Anlass</h3>
+                        <span class="pso-generate-btn">Karten Generieren</span>
+                    </a>
+                `;
+
+                Object.values(cardsGroupMap).forEach(card => {
+                    let finalThumb = card.preview_img ? card.preview_img : "/web_images/crop01.png";
+                    let pdfButtonHTML = card.pdf_url ? `<a href="${card.pdf_url}" target="_blank" class="pso-action-btn btn-pdf">📄 PDF</a>` : '';
+                    let videoButtonHTML = card.video_url ? `<a href="${card.video_url}" target="_blank" class="pso-action-btn btn-video">🎬 Video</a>` : '';
+                    
+                    container.innerHTML += `
+                        <div class="pso-card-box" id="card_box_container_${card.generation_key}">
+                            <div class="pso-preview-holder">
+                                <img src="${finalThumb}?t=${Date.now()}" alt="${card.title}">
+                            </div>
+                            <div class="pso-card-name">${card.title}</div>
+                            
+                            <!-- 🚀 NEW 3D PNG ACTION BUTTONS ENGINE -->
+                            <div class="pso-card-actions">
+                                <!-- PDF Button Slot -->
+                                ${pdfButtonHTML ? `
+                                    <a href="${card.pdf_url || '#'}" target="_blank" class="pso-3d-btn" title="PDF herunterladen">
+                                        <img src="/views/personelloweb/karten_content/pdf.svg" alt="PDF">
+                                    </a>
+                                ` : ''}
+
+                                <!-- Video Button Slot -->
+                                ${videoButtonHTML ? `
+                                    <a href="${card.video_url || '#'}" target="_blank" class="pso-3d-btn" title="Video anschauen">
+                                        <img src="/views/personelloweb/karten_content/video.svg" alt="Video">
+                                    </a>
+                                ` : ''}
+
+                                <!-- Delete Button (Löschen) -->
+                                <button onclick="purgeCardDeployment('${card.generation_key}')" class="pso-3d-btn" title="Karte löschen" style="background: none; border: none; padding: 0; cursor: pointer; display: inline-flex;">
+                                    <img src="/views/personelloweb/karten_content/delete.svg" alt="Löschen">
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (err) {
+                console.error("Grid Load Error:", err);
+                if (placeholder) {
+                    placeholder.style.color = "#e74c3c";
+                    placeholder.innerHTML = "Fehler beim Laden von Karten.";
+                }
+            }
+        }
+
+        async function purgeCardDeployment(generationKey) {
+            if (!confirm(`Möchten Sie diese Karte wirklich unwiderruflich löschen?`)) return;
+            try {
+                const res = await fetch(`/api/ulf/purge/${generationKey}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.status === "success") {
+                    const el = document.getElementById(`card_box_container_${generationKey}`);
+                    if (el) el.remove();
+                    
+                    // 🚀 [FIX 2]: පරිශීලකයා අන්තිම කාඩ් එකත් ඩිලීට් කළොත්, සජීවීව ජර්මන් මැසේජ් එක නැවත පෙන්වීම
+                    const container = document.getElementById("kartenGridContainer");
+                    // කොටු 1ක් විතරක් ඉතිරි වෙලා තියෙනවා කියන්නේ බටන් එක විතරයි තියෙන්නේ (කාඩ් ඔක්කොම ඉවරයි)
+                    if (container.getElementsByClassName("pso-card-box").length === 1) {
+                        showEmptyKartenMessage();
+                    }
+                } else { 
+                    alert("Fehler beim Löschen"); 
+                }
+            } catch (err) { 
+                console.error("Purge Error:", err); 
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", loadUserKartenRegistry);
+    </script>
+</body>
+</html>

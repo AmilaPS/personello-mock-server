@@ -1,0 +1,73 @@
+/* ==========================================================================
+   1. Personello Custom Icon Font
+   ========================================================================== */
+@font-face {
+    font-family: 'personello';
+    src: url('personello.woff') format('woff'); /* මෙතනට 'personello.woff' විතරක් දැම්මාම ඇති */
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* ==========================================================================
+   2. Asap Font Family
+   ========================================================================== */
+
+/* Asap Regular (400) */
+@font-face {
+    font-family: 'Asap';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local(''),
+         url('asap-v21-latin-ext_latin-regular.woff2') format('woff2'),
+         url('asap-v21-latin-ext_latin-regular.woff') format('woff');
+}
+
+/* Asap Bold (700) */
+@font-face {
+    font-family: 'Asap';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: local(''),
+         url('asap-v21-latin-ext_latin-700.woff2') format('woff2'),
+         url('asap-v21-latin-ext_latin-700.woff') format('woff');
+}
+
+/* Asap Italic (400) */
+@font-face {
+    font-family: 'Asap';
+    font-style: italic;
+    font-weight: 400;
+    font-display: swap;
+    src: local(''),
+         url('asap-v21-latin-ext_latin-italic.woff2') format('woff2'),
+         url('asap-v21-latin-ext_latin-italic.woff') format('woff');
+}
+
+/* ==========================================================================
+   3. Amatic SC Font Family
+   ========================================================================== */
+
+/* Amatic SC Regular (400) */
+@font-face {
+    font-family: 'Amatic SC';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local(''),
+         url('amatic-sc-v22-latin-regular.woff2') format('woff2'),
+         url('amatic-sc-v22-latin-regular.woff') format('woff');
+}
+
+/* Amatic SC Bold (700) */
+@font-face {
+    font-family: 'Amatic SC';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: local(''),
+         url('amatic-sc-v22-latin-700.woff2') format('woff2'),
+         url('amatic-sc-v22-latin-700.woff') format('woff');
+}
