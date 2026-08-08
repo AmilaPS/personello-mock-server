@@ -83,7 +83,7 @@ db.serialize(() => {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
-            role TEXT DEFAULT 'regular',
+            role TEXT DEFAULT 'User',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `);
@@ -138,24 +138,25 @@ app.get('/mypersonello', (req, res) => {
     if (!req.session.user) return res.redirect('/mypersonello/login?error=unauthorized'); 
     
     const userId = req.session.user.id; 
+    const userRole = (req.session.user.role === 'Admin' || req.session.user.role === 'pro') ? 'Admin' : 'User';
 
     try {
         const headerHtml = fs.readFileSync(path.join(webpageFolder, 'header.html'), 'utf8'); 
         let contentHtml = fs.readFileSync(path.join(webpageFolder, 'meinkonto_content.html'), 'utf8'); 
         const footerHtml = fs.readFileSync(path.join(webpageFolder, 'footer.html'), 'utf8'); 
 
-        // 🚀 1. සැබෑ Log වූ User වෙනුවෙන් තත්පර 60කට පමණක් වලංගු One-Time Security Token එකක් සාදයි
+        // 🚀 1. Admin/User Role එක සමඟ තත්පර 60කට පමණක් වලංගු One-Time Security Token එකක් සාදයි
         const token = crypto.randomBytes(16).toString('hex');
-        authTokens.set(token, { userId: userId, expires: Date.now() + 60000 });
+        authTokens.set(token, { userId: userId, role: userRole, expires: Date.now() + 60000 });
 
         // 🚀 2. user_id වෙනුවට Security Token එක යෙදූ Dynamic Link එක සාදයි
         const generateLink = `${CARD_APP_URL}/home?token=${token}`;
         
         contentHtml = contentHtml.split('{{GENERATE_LINK}}').join(generateLink);
 
-        if (req.session.user.role === 'pro') {
-            contentHtml = contentHtml.replace('{{PC_PRO_BADGE}}', '<span class="pso-pro-badge">Pro</span>');
-            contentHtml = contentHtml.replace('{{MOBILE_PRO_BADGE}}', '<div class="pso-mobile-pro-wrapper"><span class="pso-pro-badge">Pro</span></div>');
+        if (userRole === 'Admin') {
+            contentHtml = contentHtml.replace('{{PC_PRO_BADGE}}', '<span class="pso-pro-badge">Admin</span>');
+            contentHtml = contentHtml.replace('{{MOBILE_PRO_BADGE}}', '<div class="pso-mobile-pro-wrapper"><span class="pso-pro-badge">Admin</span></div>');
         } else {
             contentHtml = contentHtml.replace('{{PC_PRO_BADGE}}', '');
             contentHtml = contentHtml.replace('{{MOBILE_PRO_BADGE}}', '');
@@ -175,6 +176,7 @@ app.get('/mypersonello/karten', (req, res) => {
     }
 
     const userId = req.session.user.id; 
+    const userRole = (req.session.user.role === 'Admin' || req.session.user.role === 'pro') ? 'Admin' : 'User';
     const webpageFolder = path.join(__dirname, 'views', 'personelloweb'); 
 
     try {
@@ -184,15 +186,15 @@ app.get('/mypersonello/karten', (req, res) => {
         
         // 🚀 තත්පර 60ක One-Time Token එක සෑදීම
         const token = crypto.randomBytes(16).toString('hex');
-        authTokens.set(token, { userId: userId, expires: Date.now() + 60000 });
+        authTokens.set(token, { userId: userId, role: userRole, expires: Date.now() + 60000 });
 
         const generateLink = `${CARD_APP_URL}/home?token=${token}`;
         
         contentHtml = contentHtml.split('{{GENERATE_LINK}}').join(generateLink);
 
-        if (req.session.user.role === 'pro') {
-            contentHtml = contentHtml.replace('{{PC_PRO_BADGE}}', '<span class="pso-pro-badge">Pro</span>');
-            contentHtml = contentHtml.replace('{{MOBILE_PRO_BADGE}}', '<div class="pso-mobile-pro-wrapper"><span class="pso-pro-badge">Pro</span></div>');
+        if (userRole === 'Admin') {
+            contentHtml = contentHtml.replace('{{PC_PRO_BADGE}}', '<span class="pso-pro-badge">Admin</span>');
+            contentHtml = contentHtml.replace('{{MOBILE_PRO_BADGE}}', '<div class="pso-mobile-pro-wrapper"><span class="pso-pro-badge">Admin</span></div>');
         } else {
             contentHtml = contentHtml.replace('{{PC_PRO_BADGE}}', '');
             contentHtml = contentHtml.replace('{{MOBILE_PRO_BADGE}}', '');
@@ -216,7 +218,8 @@ app.post('/api/auth/register', async (req, res) => {
         if (!frmStr_email || !frmStr_password || !frmStr_password_repeat) return res.status(400).send("<h3>Fehler: Alle Felder sind Pflichtfelder!</h3>"); 
         if (frmStr_password !== frmStr_password_repeat) return res.status(400).send("<h3>Fehler: Passwörter stimmen nicht überein!</h3>"); 
 
-        const assignedRole = (user_type === 'pro') ? 'pro' : 'regular'; 
+        // 🎯 Admin හෝ User ලෙස Role එක ලබාදෙයි
+        const assignedRole = (user_type === 'admin' || user_type === 'pro') ? 'Admin' : 'User'; 
 
         db.get(`SELECT id FROM users WHERE email = ?`, [frmStr_email], async (err, row) => { 
             if (err) return res.status(500).send("Server Error"); 
@@ -244,7 +247,9 @@ app.post('/api/auth/login', async (req, res) => {
             const isMatch = await bcrypt.compare(frmStr_password, user.password); 
             if (!isMatch) return res.status(400).send("<h3>Fehler: Ungültige E-Mail-Adresse oder Passwort!</h3>"); 
 
-            req.session.user = { id: user.id, email: user.email, role: user.role || 'regular' }; 
+            const currentRole = (user.role === 'Admin' || user.role === 'pro') ? 'Admin' : 'User';
+
+            req.session.user = { id: user.id, email: user.email, role: currentRole }; 
             
             const cookieOptions = { 
                 maxAge: 24 * 60 * 60 * 1000, 
@@ -253,14 +258,14 @@ app.post('/api/auth/login', async (req, res) => {
             };
 
             res.cookie('main_user_id', user.id, cookieOptions); 
-            res.cookie('user_role', user.role || 'regular', cookieOptions); 
+            res.cookie('user_role', currentRole, cookieOptions); 
             
             res.redirect('/mypersonello'); 
         });
     } catch (err) { res.status(500).send(err.message); } 
 });
 
-// 🔐 ONE-TIME SSO TOKEN VERIFICATION API
+// 🔐 ONE-TIME SSO TOKEN VERIFICATION API (With User Role)
 app.get('/api/auth/verify-token', (req, res) => {
     const token = req.query.token;
 
@@ -276,11 +281,12 @@ app.get('/api/auth/verify-token', (req, res) => {
         return res.json({ valid: false, message: "Token expired" });
     }
 
-    // Token එක නිවැරදියි! නැවත භාවිත කළ නොහැකි වන සේ මකා දමයි
+    // Token එක නිවැරදියි! role එකත් සමඟ CardApp එකට යවා token එක මකා දමයි
     const verifiedUserId = tokenData.userId;
+    const verifiedRole = tokenData.role || 'User';
     authTokens.delete(token);
 
-    res.json({ valid: true, user_id: verifiedUserId });
+    res.json({ valid: true, user_id: verifiedUserId, user_role: verifiedRole });
 });
 
 app.get('/api/auth/logout', (req, res) => {
