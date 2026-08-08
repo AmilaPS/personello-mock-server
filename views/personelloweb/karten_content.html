@@ -385,24 +385,29 @@
     <!-- 🚀 JAVASCRIPT ENGINE WITH DYNAMIC HEALTH-CHECK LOGOUT & EMPTY STATE FIX                   -->
     <!-- ========================================================================================= -->
     <script>
-        // 🚀 DYNAMIC HEALTH-CHECK LOGOUT ENGINE
+        // 🚀 IMPROVED HEALTH-CHECK LOGOUT ENGINE
         async function handleGlobalLogout() {
             const cardAppUrl = "{{CARD_APP_URL}}";
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 1200); // තත්පර 1.2ක Timeout එකක්
+            const timeoutId = setTimeout(() => controller.abort(), 1500); // තත්පර 1.5ක Timeout
 
             try {
-                // 1. CardApp Server එක Online ද කියා Static Asset එකකින් ක්ෂණිකව පරීක්ෂා කරයි
-                await fetch(`${cardAppUrl}/web_images/back.svg`, { mode: 'no-cors', signal: controller.signal });
+                // CardApp Server එකෙන් Response එකක් එනවද සහ status 200 OK ද කියා පරීක්ෂා කරයි
+                const response = await fetch(`${cardAppUrl}/web_images/back.svg`, { signal: controller.signal });
                 clearTimeout(timeoutId);
                 
-                // 2. CardApp එක ONLINE නම්: CardApp එක හරහා ගොස් Cookies Clear කර Logout වේ
-                window.location.href = `${cardAppUrl}/logout`;
+                if (response.ok) {
+                    // CardApp Server එක ONLINE සහ 200 OK නම් පමණක් CardApp හරහා Logout වේ
+                    window.location.href = `${cardAppUrl}/logout`;
+                } else {
+                    // Railway එකෙන් 404 හෝ වෙනත් error එකක් ආවොත් Direct Mock Server එකෙන් Logout වේ
+                    throw new Error("Server returned non-200 status");
+                }
             } catch (error) {
                 clearTimeout(timeoutId);
-                console.warn("⚠️ CardApp Server is offline. Logging out from Mock Server directly...");
+                console.warn("⚠️ CardApp Server is offline or returning 404. Logging out from Mock Server directly...");
                 
-                // 3. CardApp එක OFFLINE නම්: CardApp එක මඟහැර කෙළින්ම Mock Server එකෙන් Logout වේ
+                // CardApp එක Offline / Deploying / 404 නම් direct Mock Server එකෙන් Logout වේ
                 window.location.href = "/api/auth/logout";
             }
         }
