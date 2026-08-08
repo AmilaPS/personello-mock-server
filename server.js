@@ -250,6 +250,24 @@ app.post('/api/auth/login', async (req, res) => {
     } catch (err) { res.status(500).send(err.message); } 
 });
 
+// 🔐 SECURE USER VERIFICATION API (Session Check එක සමඟ)
+app.get('/api/auth/verify-user', (req, res) => {
+    const userId = req.query.user_id;
+
+    // 1. පරිශීලකයා Username/Password ගසා සැබැවින්ම Log වී ඇත්දැයි (Session එකක් තිබේදැයි) බලයි
+    if (!req.session || !req.session.user) {
+        return res.json({ valid: false, message: "User not logged in on Mock Server" });
+    }
+
+    // 2. Active Session එකේ ඉන්න User ID එකයි URL එකේ එන ID එකයි 100% ක් සමානදැයි බලයි
+    if (String(req.session.user.id) === String(userId)) {
+        return res.json({ valid: true });
+    }
+
+    // වෙන කෙනෙකුගේ ID එකක් URL එකේ ගැහුවොත් Block කරයි
+    res.json({ valid: false });
+});
+
 app.get('/api/auth/logout', (req, res) => {
     req.session.destroy((err) => { 
         if (err) console.error(err); 
