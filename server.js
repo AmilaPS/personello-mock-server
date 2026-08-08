@@ -128,7 +128,7 @@ app.get('/mypersonello/register', (req, res) => {
     renderPage('register.html', res); 
 });
 
-app.get('/mypersonello/register_pro', (req, res) => {
+app.get('/mypersonello/register_admin', (req, res) => {
     if (req.session.user) return res.redirect('/mypersonello'); 
     renderPage('admin_register.html', res); 
 });
