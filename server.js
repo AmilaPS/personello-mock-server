@@ -8,14 +8,12 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session'); 
 const os = require('os');
 const cron = require('node-cron');
-const crypto = require('crypto'); // 👈 One-Time Security Token නිර්මාණයට
+const crypto = require('crypto');
 
 const app = express();
 
-// 🔑 One-Time Auth Tokens තබා ගැනීමට Memory Store එක
 const authTokens = new Map();
 
-// 🚀 Active Wi-Fi/LAN IP එක Auto සොයාගන්නා Engine එක
 function getLocalIP() {
     const interfaces = os.networkInterfaces();
     for (const interfaceName in interfaces) {
@@ -28,18 +26,12 @@ function getLocalIP() {
     return 'localhost';
 }
 
-// =================================================================
-// 🎯 ENVIRONMENT CONFIGURATION LINKING (.env + Cloud/Auto IP)
-// =================================================================
 const NETWORK_IP = getLocalIP(); 
 const ULF_PORT = process.env.PORT || process.env.ULF_PORT || 5002; 
 const CARD_APP_PORT = process.env.CARD_APP_PORT || 3000; 
 
-// Railway Public URL එක ඇත්නම් එය ගනී, නැත්නම් Local IP එක පාවිච්චි කරයි
 const CARD_APP_URL = process.env.CARD_APP_URL || `http://${NETWORK_IP}:${CARD_APP_PORT}`;
-// =================================================================
 
-// 🎯 CardApp සහ ULF Server අතර Cookies / Sessions හුවමාරුවට CORS සකස් කිරීම
 app.use(cors({
     origin: [CARD_APP_URL, `http://localhost:${CARD_APP_PORT}`, `http://127.0.0.1:${CARD_APP_PORT}`],
     credentials: true
@@ -49,7 +41,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true })); 
 app.use(cookieParser());
 
-// Session සැකසුම් (User ලොග් වී සිටින බව මතක තබා ගැනීමට)
 app.use(session({
     secret: 'ulf_secure_secret_key_2026', 
     resave: false, 
@@ -57,7 +48,6 @@ app.use(session({
     cookie: { maxAge: 24 * 60 * 60 * 1000, sameSite: 'lax' } 
 }));
 
-// Dynamic Directory Paths සකස් කිරීම
 const rootDir = __dirname; 
 const viewsDir = path.join(rootDir, 'views'); 
 const storageDir = path.join(rootDir, 'ulf_storage', 'Cards'); 
@@ -70,13 +60,11 @@ if (!fs.existsSync(storageDir)) {
 app.use('/views', express.static(viewsDir)); 
 app.use('/views/ulf_storage', express.static(path.join(rootDir, 'ulf_storage')));
 
-// SQLite3 සහ Bcrypt සම්බන්ධ කිරීම
 const sqlite3 = require('sqlite3').verbose(); 
 const bcrypt = require('bcrypt'); 
 const dbPath = path.join(rootDir, 'personello.db'); 
 const db = new sqlite3.Database(dbPath); 
 
-// Users Table එක නිර්මාණය
 db.serialize(() => {
     db.run(`
         CREATE TABLE IF NOT EXISTS users (
@@ -89,14 +77,12 @@ db.serialize(() => {
     `);
 });
 
-// Multer Config
 const storage = multer.diskStorage({
     destination: (req, file, cb) => { cb(null, storageDir); }, 
     filename: (req, file, cb) => { cb(null, 'temp_' + Date.now() + '_' + file.originalname); }
 });
 const upload = multer({ storage: storage }); 
 
-// පොදු TEMPLATE FUNCTION එක
 function renderPage(contentFileName, res) {
     try {
         const headerHtml = fs.readFileSync(path.join(webpageFolder, 'header.html'), 'utf8'); 
@@ -133,7 +119,6 @@ app.get('/mypersonello/register_admin', (req, res) => {
     renderPage('admin_register.html', res); 
 });
 
-// 'meinkonto_content.html' පිටුවේ Pro Badge එක සහ SSO Token ලින්ක් එක සකස් කිරීම
 app.get('/mypersonello', (req, res) => {
     if (!req.session.user) return res.redirect('/mypersonello/login?error=unauthorized'); 
     
@@ -145,14 +130,14 @@ app.get('/mypersonello', (req, res) => {
         let contentHtml = fs.readFileSync(path.join(webpageFolder, 'meinkonto_content.html'), 'utf8'); 
         const footerHtml = fs.readFileSync(path.join(webpageFolder, 'footer.html'), 'utf8'); 
 
-        // 🚀 1. Admin/User Role එක සමඟ තත්පර 60කට පමණක් වලංගු One-Time Security Token එකක් සාදයි
         const token = crypto.randomBytes(16).toString('hex');
         authTokens.set(token, { userId: userId, role: userRole, expires: Date.now() + 60000 });
 
-        // 🚀 2. user_id වෙනුවට Security Token එක යෙදූ Dynamic Link එක සාදයි
         const generateLink = `${CARD_APP_URL}/home?token=${token}`;
         
+        // 🚀 DYNAMIC PLACEHOLDERS REPLACED HERE
         contentHtml = contentHtml.split('{{GENERATE_LINK}}').join(generateLink);
+        contentHtml = contentHtml.replaceAll('{{CARD_APP_URL}}', CARD_APP_URL);
 
         if (userRole === 'Admin') {
             contentHtml = contentHtml.replace('{{PC_PRO_BADGE}}', '<span class="pso-pro-badge">Admin</span>');
@@ -169,7 +154,6 @@ app.get('/mypersonello', (req, res) => {
     }
 });
 
-// 'karten_content.html' පිටුවේ SSO Token ලින්ක් එක සකස් කිරීම
 app.get('/mypersonello/karten', (req, res) => {
     if (!req.session.user) {
         return res.redirect('/mypersonello/login?error=unauthorized'); 
@@ -184,13 +168,14 @@ app.get('/mypersonello/karten', (req, res) => {
         let contentHtml = fs.readFileSync(path.join(webpageFolder, 'karten_content.html'), 'utf8'); 
         const footerHtml = fs.readFileSync(path.join(webpageFolder, 'footer.html'), 'utf8'); 
         
-        // 🚀 තත්පර 60ක One-Time Token එක සෑදීම
         const token = crypto.randomBytes(16).toString('hex');
         authTokens.set(token, { userId: userId, role: userRole, expires: Date.now() + 60000 });
 
         const generateLink = `${CARD_APP_URL}/home?token=${token}`;
         
+        // 🚀 DYNAMIC PLACEHOLDERS REPLACED HERE
         contentHtml = contentHtml.split('{{GENERATE_LINK}}').join(generateLink);
+        contentHtml = contentHtml.replaceAll('{{CARD_APP_URL}}', CARD_APP_URL);
 
         if (userRole === 'Admin') {
             contentHtml = contentHtml.replace('{{PC_PRO_BADGE}}', '<span class="pso-pro-badge">Admin</span>');
@@ -218,7 +203,6 @@ app.post('/api/auth/register', async (req, res) => {
         if (!frmStr_email || !frmStr_password || !frmStr_password_repeat) return res.status(400).send("<h3>Fehler: Alle Felder sind Pflichtfelder!</h3>"); 
         if (frmStr_password !== frmStr_password_repeat) return res.status(400).send("<h3>Fehler: Passwörter stimmen nicht überein!</h3>"); 
 
-        // 🎯 Admin හෝ User ලෙස Role එක ලබාදෙයි
         const assignedRole = (user_type === 'admin' || user_type === 'pro') ? 'Admin' : 'User'; 
 
         db.get(`SELECT id FROM users WHERE email = ?`, [frmStr_email], async (err, row) => { 
@@ -265,7 +249,6 @@ app.post('/api/auth/login', async (req, res) => {
     } catch (err) { res.status(500).send(err.message); } 
 });
 
-// 🔐 ONE-TIME SSO TOKEN VERIFICATION API (With User Role)
 app.get('/api/auth/verify-token', (req, res) => {
     const token = req.query.token;
 
@@ -275,13 +258,11 @@ app.get('/api/auth/verify-token', (req, res) => {
 
     const tokenData = authTokens.get(token);
 
-    // Token එක කල් ඉකුත් වී ඇත්නම් (තත්පර 60 පැන්නා නම්)
     if (Date.now() > tokenData.expires) {
         authTokens.delete(token);
         return res.json({ valid: false, message: "Token expired" });
     }
 
-    // Token එක නිවැරදියි! role එකත් සමඟ CardApp එකට යවා token එක මකා දමයි
     const verifiedUserId = tokenData.userId;
     const verifiedRole = tokenData.role || 'User';
     authTokens.delete(token);
@@ -367,9 +348,6 @@ app.delete('/api/ulf/purge/:generation_key', (req, res) => {
     });
 });
 
-// =================================================================
-// ⏰ ULF STORAGE CLEANUP ENGINE (EVERY 4 HOURS - DELETE FILES > 14 DAYS)
-// =================================================================
 function cleanOldStorageFiles() {
     if (!fs.existsSync(storageDir)) return;
 
@@ -407,9 +385,6 @@ cron.schedule('0 */4 * * *', () => {
     cleanOldStorageFiles();
 });
 
-// -----------------------------------------------------------------
-// 4. SERVER INITIALIZATION 
-// -----------------------------------------------------------------
 app.listen(ULF_PORT, '0.0.0.0', () => {
     console.log(`\n======================================================`);
     console.log(`🚀 ULF AUTH & STORAGE SERVER ONLINE ON PORT: ${ULF_PORT}`);
