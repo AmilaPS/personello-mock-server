@@ -50,6 +50,7 @@
             color: #4a5568 !important;
             text-decoration: none;
             transition: transform 0.2s ease;
+            cursor: pointer;
         }
         .pso-logout-top-btn:hover {
             transform: scale(1.05);
@@ -315,9 +316,9 @@
             <!-- Mobile Back Button (Left) -->
             <a href="https://de.personello.com/" class="pso-mobile-back" style="display: none;">&lt; Home</a>
             
-            <!-- 🚀 LOGOUT BUTTON (FIRST CLEARS CARDAPP COOKIES, THEN LOGS OUT MOCK SERVER) -->
+            <!-- 🚀 LOGOUT BUTTON WITH JS FAIL-SAFE LOGIC -->
             <div>
-                <a href="{{CARD_APP_URL}}/logout" class="pso-logout-top-btn" title="Abmelden">
+                <a href="javascript:void(0);" onclick="handleGlobalLogout()" class="pso-logout-top-btn" title="Abmelden">
                     <img src="/views/personelloweb/meinkonto_content/logout.svg" alt="Logout">
                 </a>
             </div>
@@ -435,6 +436,23 @@
         </div>
 
     </div>
+
+    <!-- 🚀 JS FAIL-SAFE LOGOUT ENGINE -->
+    <script>
+        async function handleGlobalLogout() {
+            const cardAppUrl = "{{CARD_APP_URL}}";
+
+            try {
+                // CardApp Server එක Online තිබුණොත් එකේ Cookies clear කිරීමට background request එකක් යවයි
+                await fetch(`${cardAppUrl}/logout`, { mode: 'no-cors' });
+            } catch (error) {
+                console.warn("CardApp Server is offline, proceeding with Mock Server logout.");
+            } finally {
+                // CardApp එක On/Off මොකක් වුණත් Mock Server එකෙන් Logout වී Login එකට යයි
+                window.location.href = "/api/auth/logout";
+            }
+        }
+    </script>
 
 </body>
 </html>
