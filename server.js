@@ -130,7 +130,7 @@ app.get('/mypersonello/register', (req, res) => {
 
 app.get('/mypersonello/register_pro', (req, res) => {
     if (req.session.user) return res.redirect('/mypersonello'); 
-    renderPage('pro_register.html', res); 
+    renderPage('admin_register.html', res); 
 });
 
 // 'meinkonto_content.html' පිටුවේ Pro Badge එක සහ SSO Token ලින්ක් එක සකස් කිරීම
