@@ -50,6 +50,7 @@
             color: #4a5568 !important;
             text-decoration: none;
             transition: transform 0.2s ease;
+            cursor: pointer;
         }
         .pso-logout-top-btn:hover {
             transform: scale(1.05);
@@ -315,9 +316,9 @@
             <!-- Mobile Back Button (Left) -->
             <a href="https://de.personello.com/" class="pso-mobile-back" style="display: none;">&lt; Home</a>
             
-            <!-- 🚀 LOGOUT BUTTON (FIRST CLEARS CARDAPP COOKIES, THEN LOGS OUT MOCK SERVER) -->
+            <!-- 🚀 LOGOUT BUTTON WITH JS FAIL-SAFE & STATUS CHECK ENGINE -->
             <div>
-                <a href="{{CARD_APP_URL}}/logout" class="pso-logout-top-btn" title="Abmelden">
+                <a href="javascript:void(0);" onclick="handleGlobalLogout()" class="pso-logout-top-btn" title="Abmelden">
                     <img src="/views/personelloweb/meinkonto_content/logout.svg" alt="Logout">
                 </a>
             </div>
@@ -435,6 +436,35 @@
         </div>
 
     </div>
+
+    <!-- 🚀 JS FAIL-SAFE & HTTP STATUS CHECK LOGOUT ENGINE -->
+    <script>
+        async function handleGlobalLogout() {
+            const cardAppUrl = "{{CARD_APP_URL}}";
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 1500); // තත්පර 1.5ක Timeout
+
+            try {
+                // CardApp Server එකෙන් Response එකක් එනවද සහ status 200 OK ද කියා පරීක්ෂා කරයි
+                const response = await fetch(`${cardAppUrl}/web_images/back.svg`, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    // CardApp Server එක ONLINE සහ 200 OK නම් පමණක් CardApp හරහා Logout වේ
+                    window.location.href = `${cardAppUrl}/logout`;
+                } else {
+                    // Railway එකෙන් 404 හෝ වෙනත් error එකක් ආවොත් Direct Mock Server එකෙන් Logout වේ
+                    throw new Error("Server returned non-200 status");
+                }
+            } catch (error) {
+                clearTimeout(timeoutId);
+                console.warn("⚠️ CardApp Server is offline or returning 404. Logging out from Mock Server directly...");
+                
+                // CardApp එක Offline / Deploying / 404 නම් direct Mock Server එකෙන් Logout වේ
+                window.location.href = "/api/auth/logout";
+            }
+        }
+    </script>
 
 </body>
 </html>
