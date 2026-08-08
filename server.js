@@ -6,10 +6,14 @@ const multer = require('multer');
 const fs = require('fs');
 const cookieParser = require('cookie-parser');
 const session = require('express-session'); 
-const os = require('os'); // 👈 Active IP එක Auto Detect කිරීම සඳහා os module එක
+const os = require('os');
 const cron = require('node-cron');
+const crypto = require('crypto'); // 👈 One-Time Security Token නිර්මාණයට
 
 const app = express();
+
+// 🔑 One-Time Auth Tokens තබා ගැනීමට Memory Store එක
+const authTokens = new Map();
 
 // 🚀 Active Wi-Fi/LAN IP එක Auto සොයාගන්නා Engine එක
 function getLocalIP() {
@@ -129,7 +133,7 @@ app.get('/mypersonello/register_pro', (req, res) => {
     renderPage('pro_register.html', res); 
 });
 
-// 'meinkonto_content.html' පිටුවේ Pro Badge එක replace කිරීම
+// 'meinkonto_content.html' පිටුවේ Pro Badge එක සහ SSO Token ලින්ක් එක සකස් කිරීම
 app.get('/mypersonello', (req, res) => {
     if (!req.session.user) return res.redirect('/mypersonello/login?error=unauthorized'); 
     
@@ -140,8 +144,12 @@ app.get('/mypersonello', (req, res) => {
         let contentHtml = fs.readFileSync(path.join(webpageFolder, 'meinkonto_content.html'), 'utf8'); 
         const footerHtml = fs.readFileSync(path.join(webpageFolder, 'footer.html'), 'utf8'); 
 
-        // 🚀 Dynamic CardApp Auto IP ලින්ක් එක සකසයි
-        const generateLink = `${CARD_APP_URL}/home?user_id=${userId}`;
+        // 🚀 1. සැබෑ Log වූ User වෙනුවෙන් තත්පර 60කට පමණක් වලංගු One-Time Security Token එකක් සාදයි
+        const token = crypto.randomBytes(16).toString('hex');
+        authTokens.set(token, { userId: userId, expires: Date.now() + 60000 });
+
+        // 🚀 2. user_id වෙනුවට Security Token එක යෙදූ Dynamic Link එක සාදයි
+        const generateLink = `${CARD_APP_URL}/home?token=${token}`;
         
         contentHtml = contentHtml.split('{{GENERATE_LINK}}').join(generateLink);
 
@@ -160,7 +168,7 @@ app.get('/mypersonello', (req, res) => {
     }
 });
 
-// 'karten_content.html' පිටුවේ මොබයිල් ලින්ක් එක replace කිරීම
+// 'karten_content.html' පිටුවේ SSO Token ලින්ක් එක සකස් කිරීම
 app.get('/mypersonello/karten', (req, res) => {
     if (!req.session.user) {
         return res.redirect('/mypersonello/login?error=unauthorized'); 
@@ -174,8 +182,11 @@ app.get('/mypersonello/karten', (req, res) => {
         let contentHtml = fs.readFileSync(path.join(webpageFolder, 'karten_content.html'), 'utf8'); 
         const footerHtml = fs.readFileSync(path.join(webpageFolder, 'footer.html'), 'utf8'); 
         
-        // 🚀 Dynamic Auto IP ලින්ක් එක සාදයි
-        const generateLink = `${CARD_APP_URL}/home?user_id=${userId}`;
+        // 🚀 තත්පර 60ක One-Time Token එක සෑදීම
+        const token = crypto.randomBytes(16).toString('hex');
+        authTokens.set(token, { userId: userId, expires: Date.now() + 60000 });
+
+        const generateLink = `${CARD_APP_URL}/home?token=${token}`;
         
         contentHtml = contentHtml.split('{{GENERATE_LINK}}').join(generateLink);
 
@@ -196,7 +207,7 @@ app.get('/mypersonello/karten', (req, res) => {
 });
 
 // -----------------------------------------------------------------
-// 2. AUTHENTICATION APIs (Register & Login)
+// 2. AUTHENTICATION APIs (Register, Login & Token Verify)
 // -----------------------------------------------------------------
 
 app.post('/api/auth/register', async (req, res) => {
@@ -235,7 +246,6 @@ app.post('/api/auth/login', async (req, res) => {
 
             req.session.user = { id: user.id, email: user.email, role: user.role || 'regular' }; 
             
-            // 🎯 CardApp Server (Port 3000) එකට Cookies ලබාගත හැකි වන පරිදි Cookie Options සකස් කිරීම
             const cookieOptions = { 
                 maxAge: 24 * 60 * 60 * 1000, 
                 httpOnly: false, 
@@ -250,22 +260,27 @@ app.post('/api/auth/login', async (req, res) => {
     } catch (err) { res.status(500).send(err.message); } 
 });
 
-// 🔐 SECURE USER VERIFICATION API (Session Check එක සමඟ)
-app.get('/api/auth/verify-user', (req, res) => {
-    const userId = req.query.user_id;
+// 🔐 ONE-TIME SSO TOKEN VERIFICATION API
+app.get('/api/auth/verify-token', (req, res) => {
+    const token = req.query.token;
 
-    // 1. පරිශීලකයා Username/Password ගසා සැබැවින්ම Log වී ඇත්දැයි (Session එකක් තිබේදැයි) බලයි
-    if (!req.session || !req.session.user) {
-        return res.json({ valid: false, message: "User not logged in on Mock Server" });
+    if (!token || !authTokens.has(token)) {
+        return res.json({ valid: false, message: "Invalid or used token" });
     }
 
-    // 2. Active Session එකේ ඉන්න User ID එකයි URL එකේ එන ID එකයි 100% ක් සමානදැයි බලයි
-    if (String(req.session.user.id) === String(userId)) {
-        return res.json({ valid: true });
+    const tokenData = authTokens.get(token);
+
+    // Token එක කල් ඉකුත් වී ඇත්නම් (තත්පර 60 පැන්නා නම්)
+    if (Date.now() > tokenData.expires) {
+        authTokens.delete(token);
+        return res.json({ valid: false, message: "Token expired" });
     }
 
-    // වෙන කෙනෙකුගේ ID එකක් URL එකේ ගැහුවොත් Block කරයි
-    res.json({ valid: false });
+    // Token එක නිවැරදියි! නැවත භාවිත කළ නොහැකි වන සේ මකා දමයි
+    const verifiedUserId = tokenData.userId;
+    authTokens.delete(token);
+
+    res.json({ valid: true, user_id: verifiedUserId });
 });
 
 app.get('/api/auth/logout', (req, res) => {
@@ -359,7 +374,7 @@ function cleanOldStorageFiles() {
         }
 
         const now = Date.now();
-        const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000; // දවස් 14 ක කාලය මිලි තත්පර වලින්
+        const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
 
         files.forEach(file => {
             const filePath = path.join(storageDir, file);
@@ -367,7 +382,6 @@ function cleanOldStorageFiles() {
             fs.stat(filePath, (err, stats) => {
                 if (err) return;
 
-                // ෆයිල් එකක් නම් සහ එහි අවසාන වෙනස්කම් කළ කාලය දවස් 14 ට වඩා වැඩිය නම්
                 if (stats.isFile() && (now - stats.mtimeMs > FOURTEEN_DAYS_MS)) {
                     fs.unlink(filePath, (err) => {
                         if (err) {
@@ -382,9 +396,8 @@ function cleanOldStorageFiles() {
     });
 }
 
-// 🎯 සෑම පැය 4කට වරක්ම මේ පරීක්ෂාව ක්‍රියාත්මක වේ (0 */4 * * *)
 cron.schedule('0 */4 * * *', () => {
-    console.log(`[Ulf Cleanup Engine] Running scheduled check (every 4 hours) for files older than 14 days in ulf_storage/Cards...[cite: 15]`);
+    console.log(`[Ulf Cleanup Engine] Running scheduled check (every 4 hours) for files older than 14 days in ulf_storage/Cards...`);
     cleanOldStorageFiles();
 });
 
