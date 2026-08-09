@@ -398,7 +398,7 @@
                 
                 if (response.ok) {
                     // CardApp Server එක ONLINE සහ 200 OK නම් පමණක් CardApp හරහා Logout වේ
-                    window.location.href = `${cardAppUrl}/logout`;
+                    window.location.href = "/api/auth/logout";
                 } else {
                     // Railway එකෙන් 404 හෝ වෙනත් error එකක් ආවොත් Direct Mock Server එකෙන් Logout වේ
                     throw new Error("Server returned non-200 status");
@@ -408,7 +408,7 @@
                 console.warn("⚠️ CardApp Server is offline or returning 404. Logging out from Mock Server directly...");
                 
                 // CardApp එක Offline / Deploying / 404 නම් direct Mock Server එකෙන් Logout වේ
-                window.location.href = "/api/auth/logout";
+                window.location.href = "/logout";
             }
         }
 
