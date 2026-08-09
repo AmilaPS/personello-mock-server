@@ -235,9 +235,11 @@ app.post('/api/auth/login', async (req, res) => {
 
             req.session.user = { id: user.id, email: user.email, role: currentRole }; 
             
+            // 🍪 COOKIE OPTIONS (Path: '/' අනිවාර්යයෙන් තිබිය යුතුය)
             const cookieOptions = { 
                 maxAge: 24 * 60 * 60 * 1000, 
                 httpOnly: false, 
+                path: '/', // 👈 මෙතනට Path: '/' එකතු කළා
                 sameSite: 'lax' 
             };
 
@@ -270,12 +272,31 @@ app.get('/api/auth/verify-token', (req, res) => {
     res.json({ valid: true, user_id: verifiedUserId, user_role: verifiedRole });
 });
 
-app.get('/api/auth/logout', (req, res) => {
+// 🚪 LOCAL MOCK SERVER LOGOUT ROUTE
+app.get('/logout', (req, res) => {
     req.session.destroy((err) => { 
         if (err) console.error(err); 
-        res.clearCookie('main_user_id'); 
-        res.clearCookie('user_role');   
+        res.clearCookie('main_user_id', { path: '/' }); // 👈 Path set කළා
+        res.clearCookie('user_role', { path: '/' });   
         res.redirect('/mypersonello/login'); 
+    });
+});
+
+// 🚪 MOCK SERVER (AUTH SERVER) LOGOUT VIA CARDAPP REDIRECT BRIDGE
+app.get('/api/auth/logout', (req, res) => {
+    req.session.destroy((err) => { 
+        if (err) console.error("❌ Session Destroy Error:", err); 
+        
+        // Auth Server එකේ තියෙන Cookies 100% Clear කිරීම
+        res.clearCookie('main_user_id', { path: '/' }); 
+        res.clearCookie('user_role', { path: '/' }); 
+        res.clearCookie('connect.sid', { path: '/' }); // Connect Session Cookie එකද Clear කරයි
+        
+        console.log("🚪 [Auth Server] Local session & cookies cleared successfully.");
+
+        // CardApp Server එක වෙත Redirect කර එහි ඇති Local Cookies ද Clear කරවයි
+        const CARD_APP_URL = process.env.CARD_APP_URL || `http://${NETWORK_IP}:${CARD_APP_PORT}`;
+        return res.redirect(`${CARD_APP_URL}/cardapp_clear_cookie`);
     });
 });
 
